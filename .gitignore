@@ -1,0 +1,39 @@
+# Build directories and files
+build/
+ninja/
+*.exe
+*.obj
+*.o
+*.dll
+*.so
+*.dylib
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.ninja
+compile_commands.json
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+.history/
+
+# IDE specific files
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# Compiler and debugger generated files
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.app
+
+# OS specific files
+.DS_Store
+Thumbs.db 
