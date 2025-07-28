@@ -1,6 +1,7 @@
 # Build directories and files
 build/
 ninja/
+tasks/
 *.exe
 *.obj
 *.o
@@ -37,3 +38,6 @@ compile_commands.json
 # OS specific files
 .DS_Store
 Thumbs.db 
+
+# AI assistant notes
+claude.md
