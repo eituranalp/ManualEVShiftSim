@@ -27,6 +27,7 @@ endif()
 # Add source files
 add_library(ev_sim_core
     src/engine.cpp
+    src/clutch.cpp
     # Future files from Task 002
     # src/driveline.cpp
     # src/input_loader.cpp
