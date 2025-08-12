@@ -3,12 +3,12 @@
 namespace ev_sim {
 
 /**
- * Simplified Clutch class focusing on RPM synchronization
+ * Models a basic clutch that handles RPM matching between engine and transmission
  * 
- * Three modes:
- * - Disengaged (clutchEngaged = 0.0): Independent RPM updates
- * - Engaged (clutchEngaged = 1.0): Locked RPM synchronization  
- * - Partial (0.0 < clutchEngaged < 1.0): Gradual RPM convergence
+ * Works in three modes:
+ * - Disengaged (0.0): Engine and transmission spin freely
+ * - Fully engaged (1.0): Engine and transmission lock together
+ * - Slipping (between 0.0-1.0): RPMs gradually sync up
  */
 class Clutch {
 private:

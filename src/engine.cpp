@@ -18,10 +18,10 @@ Engine::Engine(float idle_rpm, float max_rpm, float flywheel_inertia, float max_
 }
 
 float Engine::calculateTorque(float throttle_percent) const {
-    // More realistic torque model:
-    // - Builds up from idle to peak around 40-60% RPM
-    // - Maintains good torque until ~80% RPM
-    // - Gradual falloff to redline
+    // Simulates a typical engine torque curve:
+    // - Torque builds up smoothly from idle
+    // - Peaks in the mid-range (around 4-6k RPM)
+    // - Starts falling off as we approach redline
     
     const float rpm_ratio = rpm_ / max_rpm_;
     float torque_curve;
@@ -62,9 +62,9 @@ float Engine::calculateTorque(float throttle_percent) const {
 }
 
 float Engine::calculateDragTorque() const {
-    // Calculate drag torque using quadratic model
-    // τ_drag = -k * (rpm/1000)^2
-    // Negative sign ensures it always opposes motion
+    // Engine drag increases with the square of RPM
+    // Uses a simple quadratic model: drag = -k * (rpm/1000)²
+    // (negative because drag always opposes rotation)
     const float rpm_thousands = rpm_ / 1000.0f;
     return -drag_coefficient_ * rpm_thousands * rpm_thousands;
 }
