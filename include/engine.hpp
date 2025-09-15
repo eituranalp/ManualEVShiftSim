@@ -18,20 +18,24 @@ private:
     
     // Internal calculations
     float calculateTorque(float throttle_percent) const;
-    float calculateRPMChange(float load_torque, float dt) const;
+    float calculateRPMChange(float load_torque, float clutch_engagement, float dt) const;
     float calculateDragTorque() const;  // New method for drag calculation
+    float calculateEffectiveInertia(float clutch_engagement) const;  // Variable inertia based on clutch state
     void limitRPM();
 
 public:
     Engine(float idle_rpm, float max_rpm, float flywheel_inertia, float max_torque, float drag_coefficient = 0.1f);
     
     // Core methods
-    void update(float throttle_percent, float load_torque, float dt);
+    void update(float throttle_percent, float load_torque, float clutch_engagement, float dt);
     
     // Getters
     float getRPM() const { return rpm_; }
     float getTorque() const { return torque_output_; }
     float getTemperature() const { return temperature_; }
+    
+    // Setters (for clutch synchronization)
+    void setRPM(float rpm) { rpm_ = rpm; }
     
     // Engine characteristics
     float getIdleRPM() const { return idle_rpm_; }

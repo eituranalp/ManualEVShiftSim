@@ -3,6 +3,9 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
+// MSVC may not define M_PI with <cmath>; use our own constant for portability
+static constexpr float kPi = 3.14159265358979323846f;
+
 namespace ev_sim {
 
 Engine::Engine(float idle_rpm, float max_rpm, float flywheel_inertia, float max_torque, float drag_coefficient)
@@ -18,10 +21,7 @@ Engine::Engine(float idle_rpm, float max_rpm, float flywheel_inertia, float max_
 }
 
 float Engine::calculateTorque(float throttle_percent) const {
-    // Simulates a typical engine torque curve:
-    // - Torque builds up smoothly from idle
-    // - Peaks in the mid-range (around 4-6k RPM)
-    // - Starts falling off as we approach redline
+    // Simplified torque curve: rise to mid‑range peak, then fall toward redline
     
     const float rpm_ratio = rpm_ / max_rpm_;
     float torque_curve;
@@ -37,8 +37,8 @@ float Engine::calculateTorque(float throttle_percent) const {
         torque_curve = max_torque_ * 0.9f * (1.0f - rpm_ratio) / 0.15f;
     }
     
-    // Add engine braking when throttle is low
-    const float min_throttle = 0.1f;  // Minimum throttle to overcome engine braking
+    // Engine braking when throttle is low
+    const float min_throttle = 0.1f;
     float engine_braking = 0.0f;
     
     if (throttle_percent < min_throttle) {
@@ -49,8 +49,8 @@ float Engine::calculateTorque(float throttle_percent) const {
     // Calculate base torque
     float base_torque = torque_curve * throttle_percent + engine_braking;
     
-    // Apply rev limiter
-    const float rev_limit_start = 0.98f * max_rpm_;  // Start limiting at 98% max RPM
+    // Rev limiter begins near redline
+    const float rev_limit_start = 0.98f * max_rpm_;
     if (rpm_ >= rev_limit_start) {
         // Linear reduction from rev_limit_start to max_rpm_
         float limit_factor = (max_rpm_ - rpm_) / (max_rpm_ - rev_limit_start);
@@ -62,25 +62,35 @@ float Engine::calculateTorque(float throttle_percent) const {
 }
 
 float Engine::calculateDragTorque() const {
-    // Engine drag increases with the square of RPM
-    // Uses a simple quadratic model: drag = -k * (rpm/1000)²
-    // (negative because drag always opposes rotation)
+    // Quadratic drag: drag = -k * (rpm/1000)^2
     const float rpm_thousands = rpm_ / 1000.0f;
     return -drag_coefficient_ * rpm_thousands * rpm_thousands;
 }
 
-float Engine::calculateRPMChange(float load_torque, float dt) const {
+float Engine::calculateEffectiveInertia(float clutch_engagement) const {
+    // Increase effective inertia with engagement (simulated driveline mass)
+    const float driveline_inertia_multiplier = 1.5f;
+    const float additional_inertia = flywheel_inertia_ * (driveline_inertia_multiplier - 1.0f);
+    
+    // Interpolate by engagement
+    return flywheel_inertia_ + (additional_inertia * clutch_engagement);
+}
+
+float Engine::calculateRPMChange(float load_torque, float clutch_engagement, float dt) const {
     // Calculate drag torque
     const float drag_torque = calculateDragTorque();
     
     // Net torque = engine output - load - drag
     const float net_torque = torque_output_ - load_torque + drag_torque;
     
+    // Use effective inertia based on clutch engagement
+    const float effective_inertia = calculateEffectiveInertia(clutch_engagement);
+    
     // Angular acceleration = torque / inertia
-    const float angular_accel = net_torque / flywheel_inertia_;
+    const float angular_accel = net_torque / effective_inertia;
     
     // Convert to RPM/s (rad/s² → RPM/s)
-    const float rpm_change = angular_accel * (60.0f / (2.0f * M_PI)) * dt;
+    const float rpm_change = angular_accel * (60.0f / (2.0f * kPi)) * dt;
     
     return rpm_change;
 }
@@ -97,9 +107,12 @@ void Engine::limitRPM() {
     rpm_ = std::min(rpm_, max_rpm_);
 }
 
-void Engine::update(float throttle_percent, float load_torque, float dt) {
+void Engine::update(float throttle_percent, float load_torque, float clutch_engagement, float dt) {
     // Clamp throttle input
     throttle_percent = std::clamp(throttle_percent, 0.0f, 1.0f);
+    
+    // Clamp clutch engagement
+    clutch_engagement = std::clamp(clutch_engagement, 0.0f, 1.0f);
     
     // Calculate target torque based on current state
     float target_torque = calculateTorque(throttle_percent);
@@ -108,8 +121,8 @@ void Engine::update(float throttle_percent, float load_torque, float dt) {
     float smoothing_factor = std::clamp(5.0f * dt, 0.0f, 1.0f);
     torque_output_ = torque_output_ + smoothing_factor * (target_torque - torque_output_);
     
-    // Update RPM based on smoothed torque
-    rpm_ += calculateRPMChange(load_torque, dt);
+    // Update RPM based on smoothed torque and variable inertia
+    rpm_ += calculateRPMChange(load_torque, clutch_engagement, dt);
     
     // Apply RPM limits
     limitRPM();
