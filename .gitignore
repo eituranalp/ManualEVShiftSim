@@ -6,7 +6,6 @@ tasks/
 releases/
 package/
 package-msvc/
-docs/
 *.exe
 *.obj
 *.o
