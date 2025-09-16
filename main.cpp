@@ -124,7 +124,7 @@ int main() {
     // Create window
     SDL_Window* window = SDL_CreateWindow(
         "Manual EV Shift Simulator - Real-Time Dashboard",
-        800, 600,
+        1280, 720,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
     );
     
@@ -142,12 +142,13 @@ int main() {
     }
     
     // Enable VSync
-    SDL_GL_SetSwapInterval(1);
+    SDL_GL_SetSwapInterval(0);
     
     // Initialize ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.IniFilename = "imgui_backends/imgui.ini";
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     
     // Setup ImGui style
@@ -556,11 +557,9 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
         
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        
         SDL_GL_SwapWindow(window);
         
-        // Small sleep to prevent excessive CPU usage
-        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 FPS
+        
     }
     
     
